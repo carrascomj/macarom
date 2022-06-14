@@ -61,10 +61,11 @@ def process_matrix(
     df = pd.concat(
         [prepare_imodulon(name, S, imodulons, gene_info) for name in S.columns]
     )
-    df["position"] = df.head().apply(
+    df["position"] = df.apply(
         lambda x: x.start if x.strand == "+" else x.stop + 200, axis=1
     )
-    return df
+    df["reverse"] = df.strand.apply(lambda strand: strand == "-")
+    return df[["position", "reverse", "coefficient", "imodulon"]]
 
 
 if __name__ == "__main__":
