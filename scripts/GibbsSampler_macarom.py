@@ -37,7 +37,7 @@ data_dir = "/Users/mniel/Courses/Algorithms_in_Bioinf/ipython/data/"
 
 # In[39]:
 
-alphabet_file = data_dir + "Matrices/alphabet"
+#alphabet_file = data_dir + "Matrices/alphabet"
 alphabet = np.array( ["A","T","G","C"])
 
 
@@ -63,7 +63,7 @@ bg = {}
 #    for j, letter_2 in enumerate(alphabet):
 #        
 #        blosum62[letter_1][letter_2] = _blosum62[i, j]
-NTscoring = np.array( [[1,-1,-1,-1],[-1,1,-1,-1],[-1,-1,1,-1],[-1,-1,-1,1]] ])
+NTscoring = np.array( [[1,-1,-1,-1],[-1,1,-1,-1],[-1,-1,1,-1],[-1,-1,-1,1]] )
 
 blosum62 = NTscoring
 
@@ -76,8 +76,12 @@ def make_background_freq_vector(GC):
     return np.array([A, T, G, C])
 
 
-bg = make_background_freq_vector(50.8)
+_bg = make_background_freq_vector(50.8)
 
+
+#_bg = make_background_freq_vector(0.5)
+#alphabet = np.array([“A”, ‘T’, ‘G’, ‘C’])
+bg = dict(zip(alphabet, _bg))
 
 # print(bg)
 
@@ -326,6 +330,8 @@ core_len = 9
 
 # get peptides
 peptides, min_pep_len, core_len = load_peptide_data()
+
+print(peptides)
 
 T_delta = (T_f - T_i) / T_steps
 T = np.linspace(T_i,T_f,T_steps )
