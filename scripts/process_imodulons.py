@@ -1,10 +1,10 @@
 """Functions to get the upstream positions for each imodulon in the S matrix."""
-import sys
 from os.path import join
 
 import pandas as pd
+import typer
 
-# TODO(jorge): use pymodulon
+# TODO(jorge): better with pymodulon
 
 
 def get_imodulon(
@@ -68,11 +68,12 @@ def process_matrix(
     return df[["position", "reverse", "coefficient", "imodulon"]]
 
 
-if __name__ == "__main__":
-    data_dir = sys.argv[1]
+def run(data_dir: str, out_csv: str = "genes.csv"):
     gene_info = pd.read_csv(join(data_dir, "gene_info.csv"), index_col=0)
     S = pd.read_csv(join(data_dir, "S.csv"), index_col=0)
     imodulons = pd.read_csv(join(data_dir, "curated_enrichments.csv"), index_col=0)
-    process_matrix(S, imodulons, gene_info).to_csv(
-        sys.argv[2] if len(sys.argv) > 2 else "genes.csv"
-    )
+    process_matrix(S, imodulons, gene_info).to_csv(out_csv)
+
+
+if __name__ == "__main__":
+    typer.run(run)
