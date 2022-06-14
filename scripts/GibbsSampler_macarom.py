@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 
 parser = ArgumentParser(description="GibbsSampler")
 
-parser.add_argument("-b", action="store", dest="beta", type=float, default=50.0,help="Weight on pseudo count (default: 50.0)")
+parser.add_argument("-b", action="store", dest="beta", type=float, default=0,help="Weight on pseudo count (default: 50.0)")
 parser.add_argument("-w", action="store_true", dest="sequence_weighting", help="Use Sequence weighting")
 parser.add_argument("-f", action="store", dest="peptides_file", type=str, help="File with peptides")
 parser.add_argument("-i", action="store", dest="iters_per_point", type=int,  default=6,help="Number of iteration per data point")
@@ -41,6 +41,7 @@ data_dir = "/Users/mniel/Courses/Algorithms_in_Bioinf/ipython/data/"
 alphabet = np.array( ["A","T","G","C"])
 
 
+NTscoring = np.array( [[1,1/10,1/10,1/10],[1/10,1,1/10,1/10],[1/10,1/10,1,1/10],[1/10,1/10,1/10,1]] )
 
 #bg_file = data_dir + "Matrices/bg.freq.fmt"
 
@@ -54,18 +55,18 @@ bg = {}
 #
 #_blosum62 = np.loadtxt(blosum_file, dtype=float).reshape((20, 20)).T
 #
-#blosum62 = {}
-#
-#for i, letter_1 in enumerate(alphabet):
-#    
-#    blosum62[letter_1] = {}
-#
-#    for j, letter_2 in enumerate(alphabet):
-#        
-#        blosum62[letter_1][letter_2] = _blosum62[i, j]
-NTscoring = np.array( [[1,-1,-1,-1],[-1,1,-1,-1],[-1,-1,1,-1],[-1,-1,-1,1]] )
+blosum62 = {}
 
-blosum62 = NTscoring
+_blosum62 = NTscoring
+
+for i, letter_1 in enumerate(alphabet):
+    
+    blosum62[letter_1] = {}
+
+    for j, letter_2 in enumerate(alphabet):
+        
+        blosum62[letter_1][letter_2] = _blosum62[i, j]
+
 
 def make_background_freq_vector(GC):
   #  ‘’'A T G C’’'
@@ -76,7 +77,7 @@ def make_background_freq_vector(GC):
     return np.array([A, T, G, C])
 
 
-_bg = make_background_freq_vector(50.8)
+_bg = make_background_freq_vector(0.508)
 
 
 #_bg = make_background_freq_vector(0.5)
@@ -129,10 +130,14 @@ def get_log_odds(peptides, alphabet, bg, scoring_scheme, core_len, c_matrix, f_m
             
             core_start = element[1]
             
+            #print("#######")
+            #print( c_matrix[position])
+            
             c_matrix[position][peptide[core_start+position]] += 1
 
             
     # Sequence Weighting
+    #print(c_matrix)
     weights = {}
 
     for element in peptides:
@@ -220,18 +225,18 @@ def get_log_odds(peptides, alphabet, bg, scoring_scheme, core_len, c_matrix, f_m
             num = alpha*f_matrix[position][letter] + beta*g_matrix[position][letter]
             
             den = alpha + beta
-
+            #print(alpha)
             p_matrix[position][letter] = num / den
         
-
+    #print(p_matrix)
     # Log Odds Weight Matrix (w)
     for position in range(0, core_len):
 
         for letter in alphabet:
 
             if p_matrix[position][letter] != 0:
-                
-                w_matrix[position][letter] = np.log(p_matrix[position][letter]/bg[letter])/np.log(2)
+                #print(p_matrix[position][letter]/bg[letter])
+                w_matrix[position][letter] =	 np.log(p_matrix[position][letter]/bg[letter])/np.log(2)
     
     # Calculate the overall score of the peptides to the LO matrix
     _sum = 0
@@ -261,6 +266,7 @@ def load_peptide_data():
     
     # Remove peptides shorter than core_len
     raw_peptides = np.loadtxt(peptides_file, dtype=str).tolist()
+    raw_peptides = [x.upper() for x in raw_peptides ]
 
     # only keep peptides with length equal to or longer than core_len
     peptides = []
@@ -297,27 +303,27 @@ def load_peptide_data():
 
 # In[43]:
 
-#def to_psi_blast(matrix):
-#
-#    header = ["", "A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
-#
-#    print('{:>4} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8}'.format(*header)) 
-#
-#    letter_order = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
-#
-#    for i, row in enumerate(matrix):
-#
-#        scores = []
-#
-#        scores.append(str(i+1) + " A")
-#
-#        for letter in letter_order:
-#
-#            score = row[letter]
-#
-#            scores.append(round(score, 4))
-#
-#        print('{:>4} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8}'.format(*scores)) 
+def to_psi_blast(matrix):
+
+    header = ["", "A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
+
+    print('{:>4} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8}'.format(*header)) 
+
+    letter_order = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
+
+    for i, row in enumerate(matrix):
+
+        scores = []
+
+        scores.append(str(i+1) + " A")
+
+        for letter in letter_order:
+
+            score = row[letter]
+
+            scores.append(round(score, 4))
+
+        print('{:>4} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8}'.format(*scores)) 
 
 
 # ## Main loop
@@ -331,7 +337,8 @@ core_len = 9
 # get peptides
 peptides, min_pep_len, core_len = load_peptide_data()
 
-print(peptides)
+#print(type(peptides))
+#print(peptides)
 
 T_delta = (T_f - T_i) / T_steps
 T = np.linspace(T_i,T_f,T_steps )
@@ -355,7 +362,7 @@ w_matrix = initialize_matrix(core_len, alphabet)
 
 # get initial log-odds matrix
 log_odds_matrix, peptide_scores, _ = get_log_odds(peptides, alphabet, bg, blosum62, core_len, c_matrix, f_matrix, g_matrix, p_matrix, w_matrix)
-
+#print(peptide_scores)
 # initial kld score
 print( "Initial KLD score: " + str(peptide_scores))
 kld = []
@@ -365,6 +372,7 @@ kld.append( peptide_scores )
 t0 = time()
 debug = False
 #debug = True
+
 
 for t in T:
 
@@ -434,4 +442,4 @@ t1 = time()
 
 print("Time elapsed (m):", (t1-t0)/60)
 
-to_psi_blast(log_odds_matrix)
+print(log_odds_matrix)
