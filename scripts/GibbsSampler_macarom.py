@@ -15,9 +15,9 @@ parser.add_argument("-Ts", action="store", dest="T_i", type=float, default=1.0, 
 parser.add_argument("-Te", action="store", dest="T_f", type=float, default=0.0001, help="End Temp")
 parser.add_argument("-nT", action="store", dest="T_steps", type=int, default=5, help="Number of T steps")
 args = parser.parse_args()
-beta = args.beta
+beta = 0#args.beta
 sequence_weighting = args.sequence_weighting
-peptides_file = args.peptides_file
+peptides_file = "/gyrA.txt" #args.peptides_file
 iters_per_point = args.iters_per_point
 seed = args.seed
 T_i = args.T_i
@@ -28,8 +28,7 @@ T_steps = args.T_steps
 # ## DEFINE THE PATH TO YOUR COURSE DIRECTORY
 
 # In[37]:
-
-data_dir = "/Users/mniel/Courses/Algorithms_in_Bioinf/ipython/data/"
+data_dir = "/Users/s143838/projects/macarom/data"
 
 # ## Data imports
 
@@ -37,35 +36,20 @@ data_dir = "/Users/mniel/Courses/Algorithms_in_Bioinf/ipython/data/"
 
 # In[39]:
 
-#alphabet_file = data_dir + "Matrices/alphabet"
 alphabet = np.array( ["A","T","G","C"])
-
-
-
-#bg_file = data_dir + "Matrices/bg.freq.fmt"
-
-#_bg = np.loadtxt(bg_file, dtype=float)
-
-bg = {}
-#for i in range(0, len(alphabet)):
-#    bg[alphabet[i]] = _bg[i]
-#
-#blosum_file = data_dir + "Matrices//blosum62.freq_rownorm"
-#
-#_blosum62 = np.loadtxt(blosum_file, dtype=float).reshape((20, 20)).T
-#
-#blosum62 = {}
-#
-#for i, letter_1 in enumerate(alphabet):
-#    
-#    blosum62[letter_1] = {}
-#
-#    for j, letter_2 in enumerate(alphabet):
-#        
-#        blosum62[letter_1][letter_2] = _blosum62[i, j]
 NTscoring = np.array( [[1,-1,-1,-1],[-1,1,-1,-1],[-1,-1,1,-1],[-1,-1,-1,1]] )
 
-blosum62 = NTscoring
+
+blosum62 = {}
+for i, letter_1 in enumerate(alphabet):
+   
+   blosum62[letter_1] = {}
+
+   for j, letter_2 in enumerate(alphabet):
+       
+       blosum62[letter_1][letter_2] = NTscoring[i, j]
+
+
 
 def make_background_freq_vector(GC):
   #  ‘’'A T G C’’'
@@ -76,7 +60,7 @@ def make_background_freq_vector(GC):
     return np.array([A, T, G, C])
 
 
-_bg = make_background_freq_vector(50.8)
+_bg = make_background_freq_vector(0.508)
 
 
 #_bg = make_background_freq_vector(0.5)
@@ -232,6 +216,9 @@ def get_log_odds(peptides, alphabet, bg, scoring_scheme, core_len, c_matrix, f_m
             if p_matrix[position][letter] != 0:
                 
                 w_matrix[position][letter] = np.log(p_matrix[position][letter]/bg[letter])/np.log(2)
+
+                
+
     
     # Calculate the overall score of the peptides to the LO matrix
     _sum = 0
@@ -260,8 +247,8 @@ def score_peptide(peptide, core_start, core_len, matrix):
 def load_peptide_data():
     
     # Remove peptides shorter than core_len
-    raw_peptides = np.loadtxt(peptides_file, dtype=str).tolist()
-
+    raw_peptides = np.loadtxt(data_dir + peptides_file, dtype=str).tolist()
+    raw_peptides = [x.upper() for x in raw_peptides ]
     # only keep peptides with length equal to or longer than core_len
     peptides = []
     for i in range(0, len(raw_peptides)):
@@ -434,4 +421,10 @@ t1 = time()
 
 print("Time elapsed (m):", (t1-t0)/60)
 
-to_psi_blast(log_odds_matrix)
+def show_aligned_cores(peptides, core_len):
+    for (peptide, start) in peptides:
+        seq = peptide[start:start+core_len]
+        print(seq)
+
+show_aligned_cores(peptides, 9)
+#to_psi_blast(log_odds_matrix)
