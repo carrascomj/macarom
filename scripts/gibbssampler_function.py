@@ -1,12 +1,9 @@
-from os import wait
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 from time import time
 
 import typer
-from argparse import ArgumentParser
 
 
 # ## DEFINE THE PATH TO YOUR COURSE DIRECTORY
@@ -14,10 +11,16 @@ from argparse import ArgumentParser
 # In[37]:
 
 
+def adjust_to_complementary(candidate: str, start: int) -> tuple[str, int]:
+    if start >= len(candidate) - start:
+        return candidate[::-1], start - len(candidate)
+    return candidate, start
+
+
 def gibbs_sampler_dna(
     peptides_list: list,
     alphabet: list,
-    NTscoring: np.array,
+    NTscoring: np.ndarray,
     GC_content: float,
     beta=0.0,
     iters_per_point=6,
@@ -104,6 +107,7 @@ def gibbs_sampler_dna(
                 peptide = element[0]
 
                 core_start = element[1]
+                peptide, core_start = adjust_to_complementary(peptide, core_start)
 
                 c_matrix[position][peptide[core_start + position]] += 1
 
@@ -114,6 +118,7 @@ def gibbs_sampler_dna(
 
             peptide = element[0]
             core_start = element[1]
+            peptide, core_start = adjust_to_complementary(peptide, core_start)
 
             # apply sequence weighting
             if sequence_weighting:
@@ -161,6 +166,7 @@ def gibbs_sampler_dna(
 
                 core_start = element[1]
 
+                peptide, core_start = adjust_to_complementary(peptide, core_start)
                 f_matrix[position][peptide[core_start + position]] += weights[peptide]
 
                 n += weights[peptide]
@@ -361,13 +367,19 @@ def gibbs_sampler_dna(
             if len(peptide) != core_len:
 
                 # Bug in code, missing +1, added 09062021
-                max_core_start = len(peptide) - core_len + 1
+                max_core_start = len(peptide) * 2 - core_len + 1
                 # Maybe add check to sure core_start_shifted != core_start_original ?
                 core_start_shifted = np.random.randint(0, max_core_start)
 
-                while core_start_shifted == core_start_original:
+                n = len(peptide)
+                while core_start_shifted == core_start_original and (
+                    core_start_shifted < n - core_len
+                ):
                     core_start_shifted = np.random.randint(0, max_core_start)
-
+                prev_candidate, prev_start = adjust_to_complementary(
+                    peptide, core_start_original
+                )
+                candidate, start = adjust_to_complementary(peptide, core_start_shifted)
                 # remove peptide from list
                 peptides.remove(peptides[rand_index])
 
@@ -387,20 +399,19 @@ def gibbs_sampler_dna(
 
                 # score peptide against log_odds
                 e_original = score_peptide(
-                    peptide, core_start_original, core_len, log_odds_matrix
+                    prev_candidate, prev_start, core_len, log_odds_matrix
                 )
                 if debug:
                     print("Energy before shifting: " + str(e_original))
 
                 # score shifted peptide against log_odds
                 # e_shift = XX
-                e_shift = score_peptide(
-                    peptide, core_start_shifted, core_len, log_odds_matrix
-                )
+                e_shift = score_peptide(candidate, start, core_len, log_odds_matrix)
                 if debug:
                     print("Energy after shifting: " + str(e_shift))
 
                 # energy differential
+
                 # de_shift = XX
                 de = e_shift - e_original
 
@@ -443,6 +454,7 @@ def gibbs_sampler_dna(
 
 
 def show_aligned_cores(peptide, start, core_len):
+    peptide, start = adjust_to_complementary(peptide, start)
     return peptide[start : start + core_len]
 
 
@@ -463,7 +475,8 @@ def run(sequences_csv: str, imodulon: str = "AtoC", sequence_weighting: bool = F
         alphabet,
         NTscoring,
         GC_content,
-        T_steps=30,
+        T_steps=50,
+        iters_per_point=50,
         sequence_weighting=sequence_weighting,
     )
     print(log_odds)
