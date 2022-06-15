@@ -446,7 +446,7 @@ def show_aligned_cores(peptide, start, core_len):
     return peptide[start : start + core_len]
 
 
-def run(sequences_csv: str, imodulon: str = "AtoC"):
+def run(sequences_csv: str, imodulon: str = "AtoC", sequence_weighting: bool = False):
     """Fit an alignment with a core length in an iModulon."""
     dat_all = pd.read_csv(sequences_csv)
     print(pd.unique(dat_all.imodulon))
@@ -459,14 +459,23 @@ def run(sequences_csv: str, imodulon: str = "AtoC"):
     GC_content = 0.508
 
     log_odds, df = gibbs_sampler_dna(
-        peptides_list, alphabet, NTscoring, GC_content, T_steps=30
+        peptides_list,
+        alphabet,
+        NTscoring,
+        GC_content,
+        T_steps=30,
+        sequence_weighting=sequence_weighting,
     )
     print(log_odds)
     df.to_csv(sys.stdout)
-    print(df.apply(
-        lambda x: show_aligned_cores(x["sequence"], x["core_start"], x["core_length"]), axis=1
-    ))
-
+    print(
+        df.apply(
+            lambda x: show_aligned_cores(
+                x["sequence"], x["core_start"], x["core_length"]
+            ),
+            axis=1,
+        )
+    )
 
 
 if __name__ == "__main__":
