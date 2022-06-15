@@ -1,4 +1,5 @@
 from os import wait
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -441,9 +442,14 @@ def gibbs_sampler_dna(
     return log_odds_matrix, alignment
 
 
+def show_aligned_cores(peptide, start, core_len):
+    return peptide[start : start + core_len]
+
+
 def run(sequences_csv: str, imodulon: str = "AtoC"):
     """Fit an alignment with a core length in an iModulon."""
     dat_all = pd.read_csv(sequences_csv)
+    print(pd.unique(dat_all.imodulon))
     pep_df = dat_all.loc[dat_all.imodulon == imodulon, "seq"]
     peptides_list = pep_df.to_list()
     alphabet = np.array(["A", "T", "G", "C"])
@@ -452,7 +458,15 @@ def run(sequences_csv: str, imodulon: str = "AtoC"):
     )
     GC_content = 0.508
 
-    print(gibbs_sampler_dna(peptides_list, alphabet, NTscoring, GC_content, T_steps=30))
+    log_odds, df = gibbs_sampler_dna(
+        peptides_list, alphabet, NTscoring, GC_content, T_steps=30
+    )
+    print(log_odds)
+    df.to_csv(sys.stdout)
+    print(df.apply(
+        lambda x: show_aligned_cores(x["sequence"], x["core_start"], x["core_length"]), axis=1
+    ))
+
 
 
 if __name__ == "__main__":
