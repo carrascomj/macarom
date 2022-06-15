@@ -7,13 +7,11 @@ import typer
 
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 
+COMPL = {"A": "T", "T": "A", "G": "C", "C": "G"}
 
-def fetch_upstream(
-    genome: str, reverse: bool, position: int, upstream_len: int = 200
-) -> str:
+
+def fetch_upstream(genome: str, position: int, upstream_len: int = 200) -> str:
     slice = genome[max(position - upstream_len, 0) : position]
-    if reverse:
-        slice = slice[::-1]
     return slice
 
 
@@ -29,9 +27,7 @@ def run(input_csv: str, genome_fasta_gz: str, out_csv: str):
     """Transform the input form process_imodulons.py to sequences."""
     df = pd.read_csv(input_csv, index_col=0)
     genome = read_genome(genome_fasta_gz)
-    df["seq"] = df.apply(
-        lambda x: fetch_upstream(genome, x.reverse, x.position, 200), axis=1
-    )
+    df["seq"] = df.apply(lambda x: fetch_upstream(genome, x.position, 200), axis=1)
     df["geneid"] = df.index
     df.to_csv(out_csv, index=False)
 
