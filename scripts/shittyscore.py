@@ -27,7 +27,7 @@ mat_file = args.mat_file
 # ['A', 'B', 'C', 'D']
 
 #print(x)
-PEPTIDE = "GCCTGCGCG"
+#PEPTIDE = "GCCTGCGCG"
 _matrix = [{'A': 0.0, 'T': 0.0, 'G': 1.9770995978899213, 'C': 0.3921370971687649}, {'A': 0.438307278601691, 'T': 0.438307278601691, 'G': 0.3921370971687649, 'C': 0.3921370971687649}, {'A': 0.438307278601691, 'T': 0.438307278601691, 'G': 0.3921370971687649, 'C': 1.9770995978899213}, {'A': 0.438307278601691, 'T': 0.438307278601691, 'G': 0.3921370971687649, 'C': 0.3921370971687649}, {'A': 1.438307278601691, 'T': 0.0, 'G': 0.3921370971687649, 'C': 0.3921370971687649}, {'A': 0.0, 'T': 0.438307278601691, 'G': 0.3921370971687649, 'C': 1.3921370971687648}, {'A': 0.0, 'T': 0.0, 'G': 1.9770995978899213, 'C': 0.3921370971687649}, {'A': 0.438307278601691, 'T': 0.0, 'G': 0.3921370971687649, 'C': 0.3921370971687649}, {'A': 0.438307278601691, 'T': 0.438307278601691, 'G': 0.3921370971687649, 'C': 0.3921370971687649}]
 
 #print( type(matrix1) )
@@ -40,6 +40,7 @@ def score_peptide(
     if( len(peptide) == len(matrix) ):
         for i in range(0, len(matrix) ):
             acum += matrix[i][peptide[i]]
+        acum = acum/len(matrix)
     elif( len(peptide) > len(matrix) ):
         a = len(peptide)-len(matrix)
         for j in range(0, a+1):
@@ -48,6 +49,7 @@ def score_peptide(
             hey.append(acum)
             acum=0
         acum = max(hey)
+        acum = acum/len(matrix)
     elif( len(matrix) > len(peptide) ):
         a = len(matrix)-len(peptide)
         for j in range(0, a+1,1):
@@ -57,6 +59,7 @@ def score_peptide(
             hey.append(acum)
             acum=0
         acum = max(hey)
+        acum = acum/len(peptide)
         #print(hey)
     return acum
 
