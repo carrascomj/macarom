@@ -2,6 +2,7 @@ import json
 import sys
 from time import time
 from typing import Optional
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -21,6 +22,20 @@ def put_to_zero(matrix):
         for key in matrix[i].keys():
             matrix[i][key] = 0.0
     return matrix
+
+
+def should_accept(prev_score: float, new_score: float, t: float) -> bool:
+    de = new_score - prev_score
+
+    # probability of accepting move
+    if de > 0:
+        p = 1
+    else:
+        # e_shift = XX
+        p = np.exp(de / t)
+
+    # throw coin
+    return np.random.uniform(0.0, 1.0, 1)[0] < p
 
 
 def get_log_odds(
@@ -157,6 +172,28 @@ def adjust_to_complementary(candidate: str, start: int) -> tuple[str, int]:
     return candidate, start
 
 
+def adjust_peptides_core_len(peptides: list[tuple[str, int]], new_core_len: int):
+    """Change core length taking into account edges and complementarity.
+
+    Inplace operation.
+    """
+    for i in range(len(peptides)):
+        peptide, core_start = peptides[i]
+        length = len(peptide)
+        if (core_start < length - new_core_len) or (
+            core_start < 2 * len(peptide) - new_core_len
+        ):
+            # +/- direction, normal case
+            continue
+        elif core_start < length:
+            # + direction, edge case
+            core_start = length - new_core_len
+        else:
+            # - direction, edge case
+            core_start = length * 2 - new_core_len
+        peptides[i] = peptide, core_start
+
+
 def make_background_freq_vector(GC):
     #  ‘’'A T G C’’'
     A = (1 - (GC)) / 2
@@ -208,8 +245,11 @@ def gibbs_sampler_dna(
     T_f=0.0001,
     T_steps=5,
     sequence_weighting=False,
+    core_len_interval: Optional[list[int]] = None,
 ):
 
+    if core_len_interval is None:
+        core_len_interval = [9, 13]
     # create "blosom" matrix
     blosum62 = {}
     for i, letter_1 in enumerate(alphabet):
@@ -230,7 +270,8 @@ def gibbs_sampler_dna(
 
     np.random.seed(seed)
 
-    core_len = 9
+    # we set it to the longest so that it filters the peptides in the first pass
+    core_len = core_len_interval[-1]
 
     # get peptides
     peptides, _, core_len = load_peptide_data(peptides_list, core_len)
@@ -255,13 +296,12 @@ def gibbs_sampler_dna(
     p_matrix = initialize_matrix(core_len, alphabet)
     w_matrix = initialize_matrix(core_len, alphabet)
 
-    # get initial log-odds matrix
-    log_odds_matrix, peptide_scores, _ = get_log_odds(
-        peptides,
+    get_score_with_core_len = lambda x, y: get_log_odds(
+        x,
         alphabet,
         bg,
         blosum62,
-        core_len,
+        y,
         c_matrix,
         f_matrix,
         g_matrix,
@@ -271,19 +311,32 @@ def gibbs_sampler_dna(
         beta,
     )
 
+    # get initial log-odds matrix
+    log_odds_matrix, peptide_scores, _ = get_score_with_core_len(
+        peptides,
+        core_len,
+    )
+
     # initial kld score
     print("Initial KLD score: " + str(peptide_scores))
     kld = []
-    kld.append(peptide_scores)
+    kld.append(peptide_scores / core_len)
 
     # other stuff
     t0 = time()
     debug = False
     # debug = True
 
+    old_core_score = 1e-7
     for t in T:
-
-        for i in range(0, iters):
+        if len(core_len_interval) > 1:
+            # sample a core len and save the previous iteration in case
+            # it's rejected afterwards
+            old_core_len = core_len
+            old_peptides = deepcopy(peptides)
+            core_len = np.random.randint(*core_len_interval)
+            adjust_peptides_core_len(peptides, core_len)
+        for i in range(iters):
 
             # extract peptide
             rand_index = np.random.randint(0, len(peptides) - 1)
@@ -310,19 +363,9 @@ def gibbs_sampler_dna(
                 peptides.remove(peptides[rand_index])
 
                 # get base log_odds
-                log_odds_matrix, peptide_scores, p_matrix = get_log_odds(
+                log_odds_matrix, peptide_scores, p_matrix = get_score_with_core_len(
                     peptides,
-                    alphabet,
-                    bg,
-                    blosum62,
                     core_len,
-                    c_matrix,
-                    f_matrix,
-                    g_matrix,
-                    p_matrix,
-                    w_matrix,
-                    sequence_weighting,
-                    beta,
                 )
 
                 # score peptide against log_odds
@@ -333,32 +376,19 @@ def gibbs_sampler_dna(
                     print("Energy before shifting: " + str(e_original))
 
                 # score shifted peptide against log_odds
-                # e_shift = XX
                 e_shift = score_peptide(candidate, start, core_len, log_odds_matrix)
                 if debug:
                     print("Energy after shifting: " + str(e_shift))
 
                 # energy differential
 
-                # de_shift = XX
-                de = e_shift - e_original
+                accept = should_accept(e_original, e_shift, t)
 
-                # probability of accepting move
-                if de > 0:
-                    p = 1
-                else:
-                    # e_shift = XX
-                    p = np.exp(de / t)
-
-                # throw coin
-                coin = np.random.uniform(0.0, 1.0, 1)[0]
-
-                # if coin XX p:
-                if coin < p:
+                if accept:
                     if debug:
                         print("RNG < P, Move accepted")
                     peptides.append((peptide, core_start_shifted))
-                    kld.append(peptide_scores)
+                    kld.append(peptide_scores / core_len)
 
                 else:
                     if debug:
@@ -368,8 +398,18 @@ def gibbs_sampler_dna(
             else:
                 if debug:
                     print("Can't shift peptide, it is a " + str(core_len) + "mer")
+        new_core_score = kld[-1]
 
-        print("KLD score t: " + str(t) + " KLD: " + str(peptide_scores))
+        print(f"KLD score t ({t}); core ({core_len}); KLD ({peptide_scores});")
+        if len(core_len_interval) > 1:
+            if not should_accept(old_core_score, new_core_score, t) and (
+                old_core_len != core_len
+            ):
+                print("rejecting")
+                peptides = old_peptides
+                core_len = old_core_len
+            else:
+                old_core_score = new_core_score
 
     t1 = time()
 
@@ -393,10 +433,13 @@ def run(
     pssm_json: Optional[str] = None,
     t_steps: int = 50,
     iters_per_point: int = 50,
+    core_min: int = 9,
+    core_max: int = 9,
 ):
     """Fit an alignment with a core length in an iModulon."""
     if pssm_json is None:
         pssm_json = f"{imodulon}.json"
+    core_len_interval = (core_min, core_max) if core_min != core_max else (core_min,)
     dat_all = pd.read_csv(sequences_csv)
     pep_df = dat_all.loc[dat_all.imodulon == imodulon, "seq"]
     peptides_list = pep_df.to_list()
@@ -414,6 +457,7 @@ def run(
         T_steps=t_steps,
         iters_per_point=iters_per_point,
         sequence_weighting=sequence_weighting,
+        core_len_interval=core_len_interval,
     )
     print(log_odds)
     with open(pssm_json, "w") as f:
