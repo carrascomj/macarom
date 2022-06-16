@@ -441,7 +441,7 @@ def run(
         pssm_json = f"{imodulon}.json"
     core_len_interval = (core_min, core_max) if core_min != core_max else (core_min,)
     dat_all = pd.read_csv(sequences_csv)
-    pep_df = dat_all.loc[dat_all.imodulon == imodulon, "seq"]
+    pep_df = dat_all.loc[dat_all.imodulon.str.contains(imodulon), "seq"]
     peptides_list = pep_df.to_list()
     alphabet = np.array(["A", "T", "G", "C"])
     NTscoring = np.array(
