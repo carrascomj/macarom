@@ -391,6 +391,8 @@ def run(
     imodulon: str = "AtoC",
     sequence_weighting: bool = False,
     pssm_json: Optional[str] = None,
+    t_steps: int = 50,
+    iters_per_point: int = 50,
 ):
     """Fit an alignment with a core length in an iModulon."""
     if pssm_json is None:
@@ -409,8 +411,8 @@ def run(
         alphabet,
         NTscoring,
         GC_content,
-        T_steps=50,
-        iters_per_point=50,
+        T_steps=t_steps,
+        iters_per_point=iters_per_point,
         sequence_weighting=sequence_weighting,
     )
     print(log_odds)
