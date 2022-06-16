@@ -1,17 +1,17 @@
+import json
 import sys
+from time import time
+from typing import Optional
+
 import numpy as np
 import pandas as pd
-from time import time
-
 import typer
 
 
 def initialize_matrix(core_len, alphabet):
     init_matrix = [0] * core_len
     for i in range(0, core_len):
-        row = {}
-        for letter in alphabet:
-            row[letter] = 0.0
+        row = {letter: 0 for letter in alphabet}
         init_matrix[i] = row
     return init_matrix
 
@@ -109,8 +109,7 @@ def get_log_odds(
         for letter_1 in alphabet:
             for letter_2 in alphabet:
                 g_matrix[position][letter_1] += (
-                    f_matrix[position][letter_2]
-                    * scoring_scheme[letter_1][letter_2]
+                    f_matrix[position][letter_2] * scoring_scheme[letter_1][letter_2]
                 )
 
     # Combined Frequencies Matrix (p)
@@ -121,10 +120,7 @@ def get_log_odds(
 
         for letter in alphabet:
 
-            num = (
-                alpha * f_matrix[position][letter]
-                + beta * g_matrix[position][letter]
-            )
+            num = alpha * f_matrix[position][letter] + beta * g_matrix[position][letter]
             den = alpha + beta
             p_matrix[position][letter] = num / den
 
@@ -147,6 +143,7 @@ def get_log_odds(
 
     return w_matrix, _sum, p_matrix
 
+
 def score_peptide(peptide, core_start, core_len, matrix):
     acum = 0
     for i in range(0, core_len):
@@ -166,7 +163,7 @@ def make_background_freq_vector(GC):
     T = (1 - (GC)) / 2
     G = GC / 2
     C = GC / 2
-    return np.array([A, T, G, C]) 
+    return np.array([A, T, G, C])
 
 
 def load_peptide_data(peptides_list: list[str], core_len: int):
@@ -230,7 +227,6 @@ def gibbs_sampler_dna(
     # print(bg)
 
     # ## Calculate log-odd matrix from a given peptide core alignment
-
 
     np.random.seed(seed)
 
@@ -390,10 +386,16 @@ def show_aligned_cores(peptide, start, core_len):
     return peptide[start : start + core_len]
 
 
-def run(sequences_csv: str, imodulon: str = "AtoC", sequence_weighting: bool = False):
+def run(
+    sequences_csv: str,
+    imodulon: str = "AtoC",
+    sequence_weighting: bool = False,
+    pssm_json: Optional[str] = None,
+):
     """Fit an alignment with a core length in an iModulon."""
+    if pssm_json is None:
+        pssm_json = f"{imodulon}.json"
     dat_all = pd.read_csv(sequences_csv)
-    print(pd.unique(dat_all.imodulon))
     pep_df = dat_all.loc[dat_all.imodulon == imodulon, "seq"]
     peptides_list = pep_df.to_list()
     alphabet = np.array(["A", "T", "G", "C"])
@@ -412,6 +414,8 @@ def run(sequences_csv: str, imodulon: str = "AtoC", sequence_weighting: bool = F
         sequence_weighting=sequence_weighting,
     )
     print(log_odds)
+    with open(pssm_json, "w") as f:
+        json.dump(log_odds, f)
     df.to_csv(sys.stdout)
     print(
         df.apply(
