@@ -1,0 +1,17 @@
+imodulon,algorithm,config,pssm_pssm,consesus_seq_score
+Xyy1,macarom1,config1,5,4
+Xyy2,macarom1,config1,5,4.5
+Abb1,macarom1,config1,1,7
+Abb2,macarom1,config1,7,9.9
+Ree1,macarom1,config1,3,2.2
+Ree2,macarom1,config1,6.5,7.4
+Jor1,macarom1,config1,2.3,0.3
+Jor2,macarom1,config1,9.1,1
+Xyy1,macarom2,config2,5.9,7
+Xyy2,macarom2,config2,5.9,9.5
+Abb1,macarom2,config2,1.9,1
+Abb2,macarom2,config2,7.9,4.9
+Ree1,macarom2,config2,3.9,6.2
+Ree2,macarom2,config2,6.95,3.4
+Jor1,macarom2,config2,2.93,8.3
+Jor2,macarom2,config2,9.91,3
