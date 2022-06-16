@@ -6,19 +6,30 @@ import json
 #from time import time
 
 from argparse import ArgumentParser
+import json
 #import typer
 #parser = ArgumentParser(description="Shittyscorer")
-#parser.add_argument("-p", action="store", dest="PEPTIDE", type=str, help="Seq of peptide")
-#parser.add_argument("-mat", action="store", dest="mat_file", type=str, help="File with PSSM")
+#parser.add_argument("-p", action="store", dest="PEPTIDE", type=str, help="Seq of peptide") #parser.add_argument("-mat", action="store", dest="mat_file", type=str, help="File with PSSM")
 #args = parser.parse_args()
 #PEPTIDE = args.PEPTIDE
 #mat_file = args.mat_file
 
-Mat = {"A" : [0, 0,	1,	13,	8,	10,	4,	8,	6,	10,	8,	6,	3,	0,	0,	17,	0,	13,	0,	7,	5],
-        "C"	: [4,	0,	0,	3,	4,	2,	0,	6,	4,	2,	2,	4,	1,	0,	1,	2,	19,	0,	10,	5,	3],
-        "G"	: [0,	19,	3,	0,	0,	1,	7,	2,	3,	2,	1,	7,	1,	1,	2,	0,	0,	4,	5,	2,	3],
-        "T"	: [15,	0,	15,	3,	7,	6,	8,	3,	6,	5,	8,	2,	14,	18,	16,	0,	0,	2,	4,	5,	8]}
+# Mat = {"A" : [0, 0,	1,	13,	8,	10,	4,	8,	6,	10,	8,	6,	3,	0,	0,	17,	0,	13,	0,	7,	5],
+#         "C"	: [4,	0,	0,	3,	4,	2,	0,	6,	4,	2,	2,	4,	1,	0,	1,	2,	19,	0,	10,	5,	3],
+#         "G"	: [0,	19,	3,	0,	0,	1,	7,	2,	3,	2,	1,	7,	1,	1,	2,	0,	0,	4,	5,	2,	3],
+#         "T"	: [15,	0,	15,	3,	7,	6,	8,	3,	6,	5,	8,	2,	14,	18,	16,	0,	0,	2,	4,	5,	8]}
 #print(Mat["A"] )
+
+def load_matrix(imod_json):
+    with open(imod_json) as f:
+        return json.load(f)
+
+
+def matrix_to_dict(matrix: list[list[float]]) -> list[dict[str, float]]:
+    # A; T; G; C
+    return [{k: v for k, v in zip("ATGC", pos)} for pos in matrix]
+
+Mat = load_matrix("eval/init_eval.json")["MalT"]
 
 #for i in range(0, len(Mat["A"] ))):
 #print(Mat)
@@ -244,5 +255,6 @@ def get_log_odds(peptides = Mat,
             _sum += f_matrix[position][letter] * w_matrix[position][letter]
     #print(w_matrix)
     return w_matrix, _sum, p_matrix
+
 w_matrix, _sum, p_matrix = get_log_odds(Mat)
-print( w_matrix ) 
+print(matrix_to_dict(w_matrix))
