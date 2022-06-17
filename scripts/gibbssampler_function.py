@@ -431,6 +431,7 @@ def run(
     imodulon: str = "AtoC",
     sequence_weighting: bool = False,
     pssm_json: Optional[str] = None,
+    alignment_output: Optional[str] = None,
     t_steps: int = 50,
     iters_per_point: int = 50,
     core_min: int = 9,
@@ -463,14 +464,15 @@ def run(
     with open(pssm_json, "w") as f:
         json.dump(log_odds, f)
     df.to_csv(sys.stdout)
-    print(
-        df.apply(
-            lambda x: show_aligned_cores(
-                x["sequence"], x["core_start"], x["core_length"]
-            ),
-            axis=1,
-        )
+
+    # Get, print and save alignment og core sequences
+    alignment = df.apply(
+        lambda x: show_aligned_cores(x["sequence"], x["core_start"], x["core_length"]),
+        axis=1,
     )
+    print(alignment)
+    if alignment_output is None:
+        alignment.to_csv(alignment_output, header=False, index=False)
 
 
 if __name__ == "__main__":
