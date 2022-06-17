@@ -17,8 +17,8 @@ def run_with_tf_catch(tf_kwargs_output_dir_sequences_csv):
         run(
             sequences_csv=sequence_csv,
             imodulon=tf,
-            pssm_json=output_dir + "pssm_" + str(tf),
-            alignment_output=output_dir + "alignment_" + str(tf),
+            pssm_json=join(output_dir, "pssm_" + str(tf)),
+            alignment_output=join(output_dir, "alignment_" + str(tf)),
             **kwargs,
         )
     except IndexError:
