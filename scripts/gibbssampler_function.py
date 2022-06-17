@@ -436,6 +436,7 @@ def run(
     iters_per_point: int = 50,
     core_min: int = 9,
     core_max: int = 9,
+    NTscoring: str = "[[1, -1, -1, -1], [-1, 1, -1, -1], [-1, -1, 1, -1], [-1, -1, -1, 1]]",
 ):
     """Fit an alignment with a core length in an iModulon."""
     if pssm_json is None:
@@ -445,9 +446,8 @@ def run(
     pep_df = dat_all.loc[dat_all.imodulon.str.contains(imodulon), "seq"]
     peptides_list = pep_df.to_list()
     alphabet = np.array(["A", "T", "G", "C"])
-    NTscoring = np.array(
-        [[1, -1, -1, -1], [-1, 1, -1, -1], [-1, -1, 1, -1], [-1, -1, -1, 1]]
-    )
+    NTscoring = eval(NTscoring)
+    NTscoring = np.array(NTscoring)
     GC_content = 0.508
 
     log_odds, df = gibbs_sampler_dna(
