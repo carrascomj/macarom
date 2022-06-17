@@ -3,7 +3,7 @@ from freq2kullbackleibler import f2k
 import pandas as pd
 import os
 import numpy as np
-
+import csv
 
 #sequence_data_file = 'data/process/gene_seqs.csv'
 algo_dir = "data/process/"
@@ -44,6 +44,33 @@ def b2c():
         #print(f2k(a[0]))
         #print("###")
         #print(test2list(test_pssm[a[0]]))
+        output = []
         for i in range(0 , len(test_pssm)):
-            print("Imod:" ,a[i] , w , PSSM_comp( test2list( test_pssm[a[i]] ) ,  f2k( a[i] ) ) )
-b2c()
+            output.append( [ a[i] , w , PSSM_comp( test2list( test_pssm[a[i]] ) ,  f2k( a[i] ) ) ] )
+    return output
+
+#test = b2c() 
+
+#print( str( test[0] ).replace("[","").replace("]","")  )
+
+header = ["Imod","Algorithm","PSSM-PSSM" ]
+
+#with open("testmik.csv","w") as f:
+#    writer = csv.writer(f)
+#    writer.writerow(header)
+#    writer.writerows(test)
+#
+def lol_to_csv(lol, out_csv):
+    with open(out_csv,"w") as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        writer.writerows(lol)
+
+#def lol_to_csv(lol, out_csv):
+#    with open(out_csv, "w") as f:
+#        f.write("\n".join([",".join(row) for row in lol]))
+#
+lol_to_csv( b2c() , "testmik2.txt" )
+#
+#print( b2c() )
+
