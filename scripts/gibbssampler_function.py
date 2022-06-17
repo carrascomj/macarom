@@ -1,7 +1,7 @@
 import json
 import sys
 from time import time
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from copy import deepcopy
 
 import numpy as np
@@ -166,13 +166,13 @@ def score_peptide(peptide, core_start, core_len, matrix):
     return acum
 
 
-def adjust_to_complementary(candidate: str, start: int) -> tuple[str, int]:
+def adjust_to_complementary(candidate: str, start: int) -> Tuple[str, int]:
     if start >= len(candidate) - start:
         return candidate[::-1], start - len(candidate)
     return candidate, start
 
 
-def adjust_peptides_core_len(peptides: List[tuple[str, int]], new_core_len: int):
+def adjust_peptides_core_len(peptides: List[Tuple[str, int]], new_core_len: int):
     """Change core length taking into account edges and complementarity.
 
     Inplace operation.
@@ -245,7 +245,7 @@ def gibbs_sampler_dna(
     T_f=0.0001,
     T_steps=5,
     sequence_weighting=False,
-    core_len_interval: Optional[list[int]] = None,
+    core_len_interval: Optional[List[int]] = None,
 ):
 
     if core_len_interval is None:
@@ -471,7 +471,7 @@ def run(
         axis=1,
     )
     print(alignment)
-    if alignment_output is None:
+    if alignment_output is not( None ):
         alignment.to_csv(alignment_output, header=False, index=False)
 
 
