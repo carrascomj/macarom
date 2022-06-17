@@ -1,7 +1,7 @@
 import json
 import sys
 from time import time
-from typing import Optional
+from typing import Optional, List
 from copy import deepcopy
 
 import numpy as np
@@ -172,7 +172,7 @@ def adjust_to_complementary(candidate: str, start: int) -> tuple[str, int]:
     return candidate, start
 
 
-def adjust_peptides_core_len(peptides: list[tuple[str, int]], new_core_len: int):
+def adjust_peptides_core_len(peptides: List[tuple[str, int]], new_core_len: int):
     """Change core length taking into account edges and complementarity.
 
     Inplace operation.
@@ -203,7 +203,7 @@ def make_background_freq_vector(GC):
     return np.array([A, T, G, C])
 
 
-def load_peptide_data(peptides_list: list[str], core_len: int):
+def load_peptide_data(peptides_list: List[str], core_len: int):
     raw_peptides = [x.upper() for x in peptides_list]
     # only keep peptides with length equal to or longer than core_len
     peptides = []
@@ -234,8 +234,8 @@ def load_peptide_data(peptides_list: list[str], core_len: int):
 
 
 def gibbs_sampler_dna(
-    peptides_list: list,
-    alphabet: list,
+    peptides_list: List,
+    alphabet: List,
     NTscoring: np.ndarray,
     GC_content: float,
     beta=0.0,
@@ -447,7 +447,7 @@ def run(
     peptides_list = pep_df.to_list()
     alphabet = np.array(["A", "T", "G", "C"])
     NTscoring = eval(NTscoring)
-    NTscoring = np.array(NTscoring)
+    NTscoring: np.ndarray = np.array(NTscoring)
     GC_content = 0.508
 
     log_odds, df = gibbs_sampler_dna(
