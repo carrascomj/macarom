@@ -13,11 +13,26 @@ eval_pssm_file = "eval/init_eval.json"
 
 #shameless from stackoverflow
 algo_dirs = [f for f in os.listdir(algo_dir) if os.path.isdir(os.path.join(algo_dir, f))]
+#print( ( algo_dirs ) )
 
+#for w in algo_dirs:
+#        test_pssm_dir =  os.path.join(algo_dir,w,"" )
+#        print(test_pssm_dir)
+output = []
 def b2c():
     for w in algo_dirs:
         test_pssm_dir =  os.path.join(algo_dir,w,"" )
-        test_pssm_files = [f for f in os.listdir(test_pssm_dir) if os.path.isfile(os.path.join(test_pssm_dir, f))]
+        test_pssm_files = [f for f in os.listdir(test_pssm_dir) if os.path.isfile(os.path.join(test_pssm_dir, f)) ]
+        
+        real_test_pssm_files = []
+        # workaround for many files in pssm dir
+        for i in test_pssm_files:
+            if not i.find("pssm_"):
+                real_test_pssm_files.append(i)
+                #print("yay")
+        
+        #print(real_test_pssm_files)
+        test_pssm_files = real_test_pssm_files
         
         test = []
         for i in test_pssm_files:
@@ -25,9 +40,10 @@ def b2c():
         
         test_pssm = {}
         for i in range(0, len(test)):
-            test_pssm.update( { test_pssm_files[i].replace("_",""): pd.read_json(test[i])}  )
+            test_pssm.update( { test_pssm_files[i].replace("pssm_",""): pd.read_json(test[i])}  )
             
         a = list(test_pssm.keys())
+        
         
         alphabet = ["A","T","G","C"]
                         
@@ -44,7 +60,7 @@ def b2c():
         #print(f2k(a[0]))
         #print("###")
         #print(test2list(test_pssm[a[0]]))
-        output = []
+        
         for i in range(0 , len(test_pssm)):
             output.append( [ a[i] , w , PSSM_comp( test2list( test_pssm[a[i]] ) ,  f2k( a[i] ) ) ] )
     return output
@@ -73,4 +89,3 @@ def lol_to_csv(lol, out_csv):
 lol_to_csv( b2c() , "testmik2.txt" )
 #
 #print( b2c() )
-
