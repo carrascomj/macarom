@@ -1,7 +1,7 @@
-from ctypes import alignment
 from gibbssampler_function import run
 import pandas as pd
 import os
+from time import time
 
 # load the sequence data
 # find imodulons in curated list
@@ -16,6 +16,7 @@ def benchmark_gibbssampler(
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 
+    t0 = time()
     for tf in tf_list:
         pssm_output = output_dir + "pssm_" + str(tf)
         alignment_output = output_dir + "alignment_" + str(tf)
@@ -31,6 +32,11 @@ def benchmark_gibbssampler(
             )
         except IndexError:
             print("##################### " + str(tf) + " is not found in the iModulons")
+    t1 = time()
+    runtime = (t1 - t0) / 60
+
+    with open(output_dir + 'runtime.txt', 'w') as f:
+        f.write("Runetime in min.: " + str(runtime))
 
 
 ################ INITIATION ###############################
@@ -62,6 +68,8 @@ benchmark_gibbssampler(
     t_steps=t_steps,
     iters_per_point=iters_per_point,
 )
+
+
 
 ###### CONFIG 2: Variable core length
 # parameters
