@@ -25,7 +25,7 @@ def read_genome(path: str):
 
 def run(input_csv: str, genome_fasta_gz: str, out_csv: str):
     """Transform the input form process_imodulons.py to sequences."""
-    df = pd.read_csv(input_csv, index_col=0)
+    df: pd.DataFrame = pd.read_csv(input_csv, index_col=0)
     genome = read_genome(genome_fasta_gz)
     df["seq"] = df.apply(lambda x: fetch_upstream(genome, x.position, 200), axis=1)
     df["geneid"] = df.index
