@@ -2,3 +2,4 @@ pandas
 biopython
 typer
 seaborn
+logomaker
