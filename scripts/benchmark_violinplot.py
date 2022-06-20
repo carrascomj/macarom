@@ -6,7 +6,7 @@ import typer
 data_file = "data/benchmark_plot_test_data.csv"
 
 
-def benchmark_boxplot(data_file: str, output_file: str):
+def benchmark_violin(data_file: str, output_file: str):
     dat = pd.read_csv(data_file)
     sns.violinplot(data=dat, x = 'algorithm', y = 'pssm_pssm', alpha = 0.6)
     sns.swarmplot(data=dat, x = 'algorithm', y = 'pssm_pssm', hue='imodulon')
@@ -14,7 +14,7 @@ def benchmark_boxplot(data_file: str, output_file: str):
     plt.savefig(output_file,  bbox_inches='tight')
 
 def run(data_file, output_file):
-    benchmark_boxplot(data_file, output_file)
+    benchmark_violin(data_file, output_file)
     print("Saved boxplot to " + output_file)
 
 if __name__ == "__main__":
