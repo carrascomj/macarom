@@ -1,0 +1,10 @@
+# General
+*__pycache__/
+
+# Mikkel
+scripts/gibbssampler_mikk.py
+testmik.csv
+testmik2.txt
+
+# Viktor
+.venv_macarom/
