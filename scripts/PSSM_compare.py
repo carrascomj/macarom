@@ -17,7 +17,43 @@ def PSSM_comp(PSSM_test, PSSM_eval):
         #print(i.items() )
             _hey.append(list(i.values()) )
         return(_hey)
+    
+    def make_background_freq_vector(GC):
+    #  ‘’'A T G C’’'
+        A = (1 - (GC)) / 2
+        T = (1 - (GC)) / 2
+        G = GC / 2
+        C = GC / 2
+        return np.array([A, T, G, C])
         
+    GC_content = 0.508
+    
+    #print iwheri
+    
+    
+    _bg = make_background_freq_vector(GC_content)
+    alphabet = np.array(["A", "T", "G", "C"])
+    bg = dict(zip(alphabet, _bg))
+    
+        
+    #np.asarray(PSSM_test, dtype=float)
+    
+    def PSSM2Prob(mat):
+        mat2 = (2**(np.asarray(mat,dtype=float) ))
+        
+        for position in range(0, len(mat)):
+    
+            for letter in range(0,len(alphabet)):
+    
+                if mat2[position][letter] != 0:
+                    mat2[position][letter] = mat2[position][letter] * bg[ alphabet[letter] ]
+            if np.sum( mat2[position] ) != 1.0:
+            # if sum of probabilities for a given position don't add up to 1, normalize to 1
+                mat2[position] = mat2[position] * 1/np.sum(mat2[position] )
+                
+    
+        
+        return mat2
     
     
     #x = dict2list(PSSM_test)
@@ -32,8 +68,8 @@ def PSSM_comp(PSSM_test, PSSM_eval):
     
     def KL(PSSM_test, PSSM_eval):
         epsilon = 1e-5
-        PSSM_test = 2**np.asarray(PSSM_test, dtype=float)
-        PSSM_eval = 2**np.asarray(PSSM_eval, dtype=float)
+        #PSSM_test = np.asarray(PSSM_test, dtype=float)
+        #PSSM_eval = np.asarray(PSSM_eval, dtype=float)
         
         #PSSM_test = np.power())
     
@@ -48,17 +84,17 @@ def PSSM_comp(PSSM_test, PSSM_eval):
     #
     #print( len(PSSM_test[1:len(PSSM_test)]) )
     if( len(PSSM_test) == len(PSSM_eval) ):
-        scores = ( KL( dict2list(PSSM_test) ,  dict2list(PSSM_eval) )  )
+        scores = ( KL( PSSM2Prob( dict2list(PSSM_test) ) ,  PSSM2Prob( dict2list(PSSM_eval) )  )  )
         #print("Equal size")
-        score = ( (scores) )
-        #score = ( 1-np.exp(-(scores)) )
+        #score = ( (scores) )
+        score = ( 1-np.exp(-(scores)) )
     elif( len(PSSM_test) > len(PSSM_eval) ):
         a = len(PSSM_test) - len(PSSM_eval)
         scores = []
         for i in range(0,a+1):
-            scores.append( KL( dict2list(PSSM_test[i:(len(PSSM_test)-a+i) ] ) ,  dict2list(PSSM_eval) ) )
-        score = ( min(scores) )
-        #score = ( 1-np.exp(-min(scores)) )
+            scores.append( KL( PSSM2Prob( dict2list(PSSM_test[i:(len(PSSM_test)-a+i) ] ) ) ,  PSSM2Prob( dict2list(PSSM_eval) )) )
+        #score = ( min(scores) )
+        score = ( 1-np.exp(-min(scores)) )
         #print("Test>Eval")
     elif( len(PSSM_eval) > len(PSSM_test) ):
         a = len(PSSM_eval) - len(PSSM_test)
@@ -67,9 +103,9 @@ def PSSM_comp(PSSM_test, PSSM_eval):
         #print(a)
         for i in range(0,a+1):
             #print(i)
-            scores.append( KL( dict2list(PSSM_test ) ,  dict2list(PSSM_eval[i:(len(PSSM_eval)-a+i) ] ) ) )
-        score = ( min(scores) )
-        #score = ( 1-np.exp(-min(scores)) )
+            scores.append( KL( PSSM2Prob( dict2list(PSSM_test ) ),  PSSM2Prob(dict2list(PSSM_eval[i:(len(PSSM_eval)-a+i) ] ) )  ) )
+        #score = ( min(scores) )
+        score = ( 1-np.exp(-min(scores)) )
     #
     return score
 
