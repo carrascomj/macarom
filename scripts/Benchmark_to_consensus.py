@@ -70,7 +70,7 @@ def b2c():
 
 #print( str( test[0] ).replace("[","").replace("]","")  )
 
-header = ["imod","algorithm","pssm_pssm" ]
+header = ["imodulon","algorithm","pssm_pssm" ]
 
 #with open("testmik.csv","w") as f:
 #    writer = csv.writer(f)
