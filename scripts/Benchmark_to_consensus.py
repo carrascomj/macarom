@@ -8,6 +8,7 @@ import csv
 #sequence_data_file = 'data/process/gene_seqs.csv'
 algo_dir = "data/process/"
 eval_pssm_file = "eval/init_eval.json"
+output_file = "data/process/benchmark_results/benchmark_results.csv"
 #test_pssm_dir = "data/process/gibbssampler1_results/"
 #For each imodulon pssm in test_pssm_dir get filenames 
 
@@ -86,6 +87,6 @@ def lol_to_csv(lol, out_csv):
 #    with open(out_csv, "w") as f:
 #        f.write("\n".join([",".join(row) for row in lol]))
 #
-lol_to_csv( b2c() , "testmik2.txt" )
+lol_to_csv( b2c() , output_file )
 #
 #print( b2c() )
