@@ -2,6 +2,8 @@
 
 > MAximization of ClAsification of Raw Obfuscated Modulons
 
+![alt text](./macarom_logo.png "Macarom logo")
+
 ## Evaluation
 The evaluation data set is taken from the RegulonDB for _Escherichia coli_ K12. This data set has been experimentally validated and can be found here: http://regulondb.ccg.unam.mx/external_data/MatrixAlignment/results/.
 
